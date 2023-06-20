@@ -55,7 +55,7 @@ def create_config(dir, chat_id):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Please provide the input text as a command-line argument.")
-        print("example : python3 freegptcli.py \"print Hello, world! in python\"")
+        print("example : ./freegptcli.py \"print Hello, world! in python\"")
         exit(1)
 
     input_text = " ".join(sys.argv[1:])
