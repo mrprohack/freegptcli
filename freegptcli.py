@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+import json
+import requests
+import sys
+
+def get_data(input_text, chat_id, config_dir):
+    url = "https://chatbot.theb.ai/api/chat-process"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Content-Type": "application/json",
+        "Origin": "https://chatbot.theb.ai",
+        "Referer": "https://chatbot.theb.ai/"
+    }
+
+    data = {
+        "prompt": input_text,
+        "options": {
+            "parentMessageId": chat_id
+        }
+    }
+
+    try:
+        response = requests.post(url, json=data, headers=headers, timeout=120)
+        response.raise_for_status()
+
+        print_data(response)
+
+        if config_dir and chat_id.startswith("chatcmpl-"):
+            create_config(config_dir, chat_id)
+
+    except requests.exceptions.RequestException as err:
+        print(f"Some error has occurred. Check your internet connection.\nError: {err}")
+        exit(0)
+
+def print_data(response):
+    for line in response.iter_lines(decode_unicode=True):
+        if line:
+            json_obj = json.loads(line)
+            if "delta" in json_obj:
+                main_text = json_obj["delta"]
+                print(main_text, end="")
+
+def create_config(dir, chat_id):
+    try:
+        os.makedirs(dir, mode=0o755, exist_ok=True)
+        config_txt = "id:" + chat_id
+        with open(os.path.join(dir, "config.txt"), "w") as file:
+            file.write(config_txt)
+    except OSError as err:
+        print(err)
+
+# Usage
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Please provide the input text as a command-line argument.")
+        print("example : python3 freegptcli.py \"print Hello, world! in python\"")
+        exit(1)
+
+    input_text = " ".join(sys.argv[1:])
+    chat_id = "abc123"
+    config_directory = "/path/to/config/dir"
+
+    get_data(input_text, chat_id, config_directory)
+
